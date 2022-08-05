@@ -170,7 +170,7 @@ function createRenderer(options) {
         oldEndVNode = oldChildren[--oldEndIdx]
         newStartVNode = newChildren[++newStartIdx]
       } else {
-        // 都没有匹配到的情况
+        // 头尾节点都没有匹配到的情况
         const idxInOld = oldChildren.findIndex(node => node.key === newStartVNode.key)
         if(idxInOld > 0) {
           const vnodeToMove = oldChildren[idxInOld]
@@ -178,7 +178,23 @@ function createRenderer(options) {
           insert(vnodeToMove.el, container, oldStartVNode.el)
           oldChildren[idxInOld] = undefined
           newStartVNode = newChildren[++newStartIdx]
+        } else {
+          // 新增节点
+          patch(null, newStartVNode, container, oldStartVNode.el)
         }
+        newStartVNode = newChildren[++newStartIdx]
+      }
+    }
+
+    if(oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+      // 有新节点需要挂载
+      for(let i = newStartIdx; i <= newEndIdx; i++) {
+        patch(null, newChildren[i], container, oldStartVNode.el)
+      }
+    } else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
+      // 移除
+      for(let i = oldStartIdx; i <= oldEndIdx; i++) {
+        unmount(oldChildren[i])
       }
     }
   }
