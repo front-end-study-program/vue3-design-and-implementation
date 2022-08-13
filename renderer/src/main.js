@@ -1,4 +1,4 @@
-import { effect, ref } from '@vue/reactivity'
+import { effect, ref, reactive, shallowReactive  } from '@vue/reactivity'
 
 // 文本节点
 const Text = Symbol()
@@ -48,6 +48,26 @@ function getSequence(arr) {
     v = p[v]
   }
   return result
+}
+
+// 任务缓存队列
+const queue = new Set()
+// 是否正在刷新任务队列
+let isFlushing = false
+const p = Promise.resolve()
+function queueJob(job) {
+  queue.add(job)
+  if(!isFlushing) {
+    isFlushing = true
+    p.then(() => {
+      try {
+        queue.forEach(job => job())
+      } finally {
+        isFlushing = false
+        queue.length = 0
+      }
+    })
+  }
 }
 
 function shouldSetAsProps(el, key, value) {
@@ -385,6 +405,13 @@ function createRenderer(options) {
       }
     } else if(typeof type === 'object') {
       // 组件
+      if(!n1) {
+        // 挂载组件
+        mountComponent(n2, container, anchor)
+      } else {
+        // 更新组件
+        patchComponent(n1, n2, anchor)
+      }
     } else if(type === Text) {
       // 文本节点
       if(!n1) {
@@ -450,6 +477,117 @@ function createRenderer(options) {
     if(parent) {
       parent.removeChild(el)
     }
+  }
+
+  // 挂载组件
+  function mountComponent(vnode, container, anchor) {
+    const componentOptions = vnode.type
+    const { render, data, props: propsOption, beforeCreate, created, beforeMount, mounted, beforeUpdate, updated } = componentOptions
+
+    beforeCreate && beforeCreate()
+
+    // 包装成响应式数据
+    const state = reactive(data())
+    const [props, attrs] = resolveProps(propsOption, vnode.props)
+    
+    // 组件实例
+    const instance = {
+      state,
+      props: shallowReactive(props),
+      isMounted,
+      subTree: null
+    }
+
+    vnode.component = instance
+
+    // 渲染上下文
+    const renderContext = new Proxy(instance, {
+      get(t, k, r) {
+        const { state, props } = t
+        if(state && k in state) {
+          return state[k]
+        } else if (k in props) {
+          return props[key]
+        } else {
+          // 不存在
+        }
+      },
+      set(t, k, v, r) {
+        const { state, props } = t
+        if(state && k in state) {
+          state[k] = v
+        } else if (k in props) {
+          props[k] = v
+        } else {
+          // 不存在
+        }
+      }
+    })
+
+    created && created.call(renderContext)
+
+    effect(() => {
+      // 改变 this 指向
+      const subTree = render.call(renderContext, renderContext)
+
+      if(!instance.isMounted) {
+        // 初次挂载
+        beforeMount && beforeMount.call(renderContext)
+        patch(null, subTree, container, anchor)
+        instance.isMounted = true
+        mounted && mounted.call(renderContext)
+      } else {
+        beforeUpdate && beforeUpdate.call(renderContext)
+        patch(instance.subTree, subTree, container, anchor)
+        updated && updated.call(renderContext)
+      }
+
+      instance.subTree = subTree
+    }, {
+      scheduler: queueJob
+    })
+  }
+
+  // 更新组件
+  function patchComponent(n1, n2, anchor) {
+    const instance = (n2.component = n1.component)
+    const { props } = instance
+    if(hasPropsChanged(n1.props, n2.props)) {
+      const [ nextProps ] = resolveProps(n2.type.props, n2.props)
+      for(const k in nextProps) {
+        props[k] = nextProps[k]
+      }
+      for(const k in props) {
+        if(!(k in nextProps)) delete props[k]
+      }
+    }
+  }
+
+  function hasPropsChanged(prevProps, nextProps) {
+    const nextKeys = Object.keys(nextProps)
+    if(nextKeys.length !== Object.keys(prevProps).length) {
+      return true
+    }
+    for(let i = 0; i < nextKeys.length; i++) {
+      const key = nextKeys[i]
+      if(nextProps[key] !== prevProps[key]) return true
+    }
+    return false
+  }
+
+  function resolveProps(options, propsData) {
+    const props = {}
+    const attrs = {}
+    for(const key in propsData) {
+      if(key in options) {
+        // 使用组件的地方传递过来的属性
+        props[key] = propsData[key]
+      } else {
+        attrs[key] = propsData[key]
+      }
+    }
+
+    return [props, attrs]
   }
 
   function render(vnode, container) {
@@ -556,6 +694,26 @@ effect(() => {
         children: '子元素'
       }
     ]
+  }
+  const MyComponent = {
+    name: 'MyComponent',
+    props: {
+      title: {
+        type: String,
+        default: ''
+      }
+    },
+    data() {
+      return {
+        foo: 'foo'
+      }
+    },
+    render() {
+      return {
+        type: 'div',
+        children: `foo is ${this.foo} value. title is ${this.title}`
+      }
+    }
   }
   render(vnode, document.querySelector('#app'))
 })
