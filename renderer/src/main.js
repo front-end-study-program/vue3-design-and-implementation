@@ -1,4 +1,4 @@
-import { effect, ref, reactive, shallowReactive } from '@vue/reactivity'
+import { effect, ref, reactive, shallowReactive, shallowReadonly } from '@vue/reactivity'
 
 // 文本节点
 const Text = Symbol('text')
@@ -472,16 +472,17 @@ function createRenderer (options) {
     }
     const parent = vnode.el.parentNode
     if (parent) {
-      parent.removeChild(el)
+      parent.removeChild(vnode.el)
     }
   }
 
   // 挂载组件
   function mountComponent (vnode, container, anchor) {
     const componentOptions = vnode.type
-    const {
+    let {
       render,
       data,
+      setup,
       props:
       propsOption,
       beforeCreate,
@@ -495,15 +496,27 @@ function createRenderer (options) {
     beforeCreate && beforeCreate()
 
     // 包装成响应式数据
-    const state = reactive(data())
+    const state = data ? reactive(data()) : null
     const [props, attrs] = resolveProps(propsOption, vnode.props)
 
     // 组件实例
     const instance = {
       state,
       props: shallowReactive(props),
-      isMounted,
+      isMounted: false,
       subTree: null
+    }
+
+    // 处理 setup 逻辑
+    const setupContext = { attrs }
+    const setupResult = setup(shallowReadonly(instance.props), setupContext)
+    // 存储 setup 返回的数据
+    let setupState = null
+    if (typeof setupResult === 'function') {
+      if (render) console.error('setup 函数返回渲染函数，render 选项将被忽略')
+      render = setupResult
+    } else {
+      setupState = setupResult
     }
 
     vnode.component = instance
@@ -515,9 +528,12 @@ function createRenderer (options) {
         if (state && k in state) {
           return state[k]
         } else if (k in props) {
-          return props[key]
+          return props[k]
+        } else if (setupState && k in setupState) {
+          return setupState[k]
         } else {
           // 不存在
+          console.error('不存在')
         }
       },
       set (t, k, v, r) {
@@ -526,8 +542,11 @@ function createRenderer (options) {
           state[k] = v
         } else if (k in props) {
           props[k] = v
+        } else if (setupState && k in setupState) {
+          setupState[k] = v
         } else {
           // 不存在
+          console.error('不存在')
         }
       }
     })
