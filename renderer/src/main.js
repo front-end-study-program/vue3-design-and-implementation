@@ -1,4 +1,10 @@
-import { effect, ref, reactive, shallowReactive, shallowReadonly } from '@vue/reactivity'
+import {
+  effect,
+  ref,
+  reactive,
+  shallowReactive,
+  shallowReadonly
+} from '@vue/reactivity'
 
 // 文本节点
 const Text = Symbol('text')
@@ -9,7 +15,7 @@ const Comment = Symbol('comment')
 // 虚拟节点
 const Fragment = Symbol('fragment')
 
-function getSequence (arr) {
+function getSequence(arr) {
   const p = arr.slice()
   const result = [0]
   let i, j, u, v, c
@@ -55,7 +61,7 @@ const queue = new Set()
 // 是否正在刷新任务队列
 let isFlushing = false
 const p = Promise.resolve()
-function queueJob (job) {
+function queueJob(job) {
   queue.add(job)
   if (!isFlushing) {
     isFlushing = true
@@ -70,12 +76,12 @@ function queueJob (job) {
   }
 }
 
-function shouldSetAsProps (el, key, value) {
+function shouldSetAsProps(el, key, value) {
   if (key === 'form' && el.tagName === 'INPUT') return false
   return key in el
 }
 
-function createRenderer (options) {
+function createRenderer(options) {
   const {
     createElement,
     setElementText,
@@ -87,8 +93,8 @@ function createRenderer (options) {
     patchProps
   } = options
 
-  function patchElement (n1, n2) {
-    const el = n2.el = n1.el
+  function patchElement(n1, n2) {
+    const el = (n2.el = n1.el)
     const oldProps = n1.props
     const newProps = n2.props
 
@@ -106,11 +112,11 @@ function createRenderer (options) {
     patchChildren(n1, n2, el)
   }
 
-  function patchChildren (n1, n2, container) {
+  function patchChildren(n1, n2, container) {
     if (typeof n2.children === 'string') {
       // 文本新节点
       if (Array.isArray(n1.children)) {
-        n1.children.forEach((c) => unmount(c))
+        n1.children.forEach(c => unmount(c))
       }
       setElementText(container, n2.children)
     } else if (Array.isArray(n2.children)) {
@@ -126,12 +132,12 @@ function createRenderer (options) {
         fastKeyedChildren(n1, n2, container)
       } else {
         setElementText(container, '')
-        n2.children.forEach((c) => patch(null, c, container))
+        n2.children.forEach(c => patch(null, c, container))
       }
     } else {
       // 不存在新节点
       if (Array.isArray(n1.children)) {
-        n1.children.forEach((c) => unmount(c))
+        n1.children.forEach(c => unmount(c))
       } else if (typeof n1.children === 'string') {
         setElementText(container, '')
       }
@@ -139,7 +145,7 @@ function createRenderer (options) {
   }
 
   // 普通 Diff 算法
-  function ordinaryKeyedDiff (n1, n2, container) {
+  function ordinaryKeyedDiff(n1, n2, container) {
     const oldChildren = n1.children
     const newChildren = n2.children
     // 储存寻找过程中遇到的最大索引值
@@ -193,7 +199,7 @@ function createRenderer (options) {
   }
 
   // 双端 Diff 算法
-  function doubleEndedKeyedChildren (n1, n2, container) {
+  function doubleEndedKeyedChildren(n1, n2, container) {
     const oldChildren = n1.children
     const newChildren = n2.children
     // 四个索引
@@ -235,8 +241,9 @@ function createRenderer (options) {
         newStartVNode = newChildren[++newStartIdx]
       } else {
         // 头尾节点都没有匹配到的情况
-        const idxInOld = oldChildren
-          .findIndex(node => node.key === newStartVNode.key)
+        const idxInOld = oldChildren.findIndex(
+          node => node.key === newStartVNode.key
+        )
         if (idxInOld > 0) {
           const vnodeToMove = oldChildren[idxInOld]
           patch(vnodeToMove, newStartVNode, container)
@@ -265,7 +272,7 @@ function createRenderer (options) {
   }
 
   // 快速 Diff 算法
-  function fastKeyedChildren (n1, n2, container) {
+  function fastKeyedChildren(n1, n2, container) {
     const newChildren = n1.children
     const oldChildren = n2.children
 
@@ -302,7 +309,8 @@ function createRenderer (options) {
     if (j > oldEnd && j <= newEnd) {
       // j -> newEnd 为新增节点
       const anchorIndex = newEnd + 1
-      const anchor = anchorIndex < newChildren.length ? newChildren[anchorIndex].el : null
+      const anchor =
+        anchorIndex < newChildren.length ? newChildren[anchorIndex].el : null
       while (j <= newEnd) {
         patch(null, newChildren[j++], container, anchor)
       }
@@ -364,18 +372,16 @@ function createRenderer (options) {
             const pos = i + newStart
             const newVNode = newChildren[pos]
             const nextPos = pos + 1
-            const anchor = nextPos < newChildren.length
-              ? newChildren[nextPos].el
-              : null
+            const anchor =
+              nextPos < newChildren.length ? newChildren[nextPos].el : null
             patch(null, newVNode, container, anchor)
           } else if (i !== seq[s]) {
             // 该节点需要移动
             const pos = i + newStart
             const newVNode = newChildren[pos]
             const nextPos = pos + 1
-            const anchor = nextPos < newChildren.length
-              ? newChildren[nextPos].el
-              : null
+            const anchor =
+              nextPos < newChildren.length ? newChildren[nextPos].el : null
             insert(newVNode.el, container, anchor)
           } else {
             // 不需要移动
@@ -386,7 +392,7 @@ function createRenderer (options) {
     }
   }
 
-  function patch (n1, n2, container, anchor) {
+  function patch(n1, n2, container, anchor) {
     if (n1 && n1.type !== n2.type) {
       unmount(n1)
       n1 = null
@@ -413,10 +419,10 @@ function createRenderer (options) {
     } else if (type === Text) {
       // 文本节点
       if (!n1) {
-        const el = n2.el = createText(n2.children)
+        const el = (n2.el = createText(n2.children))
         insert(container, el)
       } else {
-        const el = n2.el = n1.el
+        const el = (n2.el = n1.el)
         if (n2.children !== n1.children) {
           setText(el, n2.children)
         }
@@ -424,10 +430,10 @@ function createRenderer (options) {
     } else if (type === Comment) {
       // 注释节点
       if (!n1) {
-        const el = n2.el = createComment(n2.children)
+        const el = (n2.el = createComment(n2.children))
         insert(container, el)
       } else {
-        const el = n2.el = n1.el
+        const el = (n2.el = n1.el)
         if (n2.children !== n1.children) {
           setComment(el, n2.children)
         }
@@ -435,15 +441,15 @@ function createRenderer (options) {
     } else if (type === Fragment) {
       // 虚拟节点
       if (!n1) {
-        n2.children.forEach((c) => patch(null, c, container))
+        n2.children.forEach(c => patch(null, c, container))
       } else {
         patchChildren(n1, n2, container)
       }
     }
   }
 
-  function mountElement (vnode, container, anchor) {
-    const el = vnode.el = createElement(vnode.type)
+  function mountElement(vnode, container, anchor) {
+    const el = (vnode.el = createElement(vnode.type))
 
     // 设置标签属性，区分 HTML attribute 和 DOM properties
     if (vnode.props) {
@@ -465,7 +471,7 @@ function createRenderer (options) {
     insert(el, container, anchor)
   }
 
-  function unmount (vnode) {
+  function unmount(vnode) {
     if (vnode.type === Fragment) {
       vnode.children.forEach(c => unmount(c))
       return
@@ -476,15 +482,27 @@ function createRenderer (options) {
     }
   }
 
+  let currentInstance = null
+  function setCurrentInstance(instance) {
+    currentInstance = instance
+  }
+
+  function onMounted(fn) {
+    if (currentInstance) {
+      currentInstance.mounted.push(fn)
+    } else {
+      console.error('onMounted 函数只能再 setup 中调用')
+    }
+  }
+
   // 挂载组件
-  function mountComponent (vnode, container, anchor) {
+  function mountComponent(vnode, container, anchor) {
     const componentOptions = vnode.type
     let {
       render,
       data,
       setup,
-      props:
-      propsOption,
+      props: propsOption,
       beforeCreate,
       created,
       beforeMount,
@@ -499,17 +517,41 @@ function createRenderer (options) {
     const state = data ? reactive(data()) : null
     const [props, attrs] = resolveProps(propsOption, vnode.props)
 
+    // 插槽处理
+    const slots = vnode.children || {}
+
     // 组件实例
     const instance = {
       state,
       props: shallowReactive(props),
       isMounted: false,
-      subTree: null
+      subTree: null,
+      slots,
+      mounted: []
+    }
+
+    // 自定义事件处理
+    function emit(event, ...payload) {
+      const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
+      const handler = instance.props[eventName]
+      if (handler) {
+        handler(...payload)
+      } else {
+        console.error('事件不存在')
+      }
     }
 
     // 处理 setup 逻辑
-    const setupContext = { attrs }
+    const setupContext = {
+      attrs,
+      emit,
+      slots
+    }
+
+    // 设置当前组件实例
+    setCurrentInstance(instance)
     const setupResult = setup(shallowReadonly(instance.props), setupContext)
+    setCurrentInstance(null)
     // 存储 setup 返回的数据
     let setupState = null
     if (typeof setupResult === 'function') {
@@ -523,8 +565,9 @@ function createRenderer (options) {
 
     // 渲染上下文
     const renderContext = new Proxy(instance, {
-      get (t, k, r) {
-        const { state, props } = t
+      get(t, k) {
+        const { state, props, slots } = t
+        if (k === '$slots') return slots
         if (state && k in state) {
           return state[k]
         } else if (k in props) {
@@ -536,7 +579,7 @@ function createRenderer (options) {
           console.error('不存在')
         }
       },
-      set (t, k, v, r) {
+      set(t, k, v) {
         const { state, props } = t
         if (state && k in state) {
           state[k] = v
@@ -553,30 +596,34 @@ function createRenderer (options) {
 
     created && created.call(renderContext)
 
-    effect(() => {
-      // 改变 this 指向
-      const subTree = render.call(renderContext, renderContext)
+    effect(
+      () => {
+        // 改变 this 指向
+        const subTree = render.call(renderContext, renderContext)
 
-      if (!instance.isMounted) {
-        // 初次挂载
-        beforeMount && beforeMount.call(renderContext)
-        patch(null, subTree, container, anchor)
-        instance.isMounted = true
-        mounted && mounted.call(renderContext)
-      } else {
-        beforeUpdate && beforeUpdate.call(renderContext)
-        patch(instance.subTree, subTree, container, anchor)
-        updated && updated.call(renderContext)
+        if (!instance.isMounted) {
+          // 初次挂载
+          beforeMount && beforeMount.call(renderContext)
+          patch(null, subTree, container, anchor)
+          instance.isMounted = true
+          mounted && mounted.call(renderContext)
+          instance.mounted.forEach(hook => hook.call(renderContext))
+        } else {
+          beforeUpdate && beforeUpdate.call(renderContext)
+          patch(instance.subTree, subTree, container, anchor)
+          updated && updated.call(renderContext)
+        }
+
+        instance.subTree = subTree
+      },
+      {
+        scheduler: queueJob
       }
-
-      instance.subTree = subTree
-    }, {
-      scheduler: queueJob
-    })
+    )
   }
 
   // 更新组件
-  function patchComponent (n1, n2, anchor) {
+  function patchComponent(n1, n2, anchor) {
     const instance = (n2.component = n1.component)
     const { props } = instance
     if (hasPropsChanged(n1.props, n2.props)) {
@@ -590,7 +637,7 @@ function createRenderer (options) {
     }
   }
 
-  function hasPropsChanged (prevProps, nextProps) {
+  function hasPropsChanged(prevProps, nextProps) {
     const nextKeys = Object.keys(nextProps)
     if (nextKeys.length !== Object.keys(prevProps).length) {
       return true
@@ -602,11 +649,11 @@ function createRenderer (options) {
     return false
   }
 
-  function resolveProps (options, propsData) {
+  function resolveProps(options, propsData) {
     const props = {}
     const attrs = {}
     for (const key in propsData) {
-      if (key in options) {
+      if (key in options || key.startsWith('on')) {
         // 使用组件的地方传递过来的属性
         props[key] = propsData[key]
       } else {
@@ -617,7 +664,7 @@ function createRenderer (options) {
     return [props, attrs]
   }
 
-  function render (vnode, container) {
+  function render(vnode, container) {
     if (vnode) {
       patch(container._vnode, vnode, container)
     } else {
@@ -634,28 +681,28 @@ function createRenderer (options) {
 }
 
 const { render } = createRenderer({
-  createElement (tag) {
+  createElement(tag) {
     return document.createElement(tag)
   },
-  setElementText (el, text) {
+  setElementText(el, text) {
     el.textContent = text
   },
-  insert (el, parent, anchor = null) {
+  insert(el, parent, anchor = null) {
     parent.insertBefore(el, anchor)
   },
-  createText (text) {
+  createText(text) {
     return document.createTextNode(text)
   },
-  setText (el, text) {
+  setText(el, text) {
     el.nodeValue = text
   },
-  createComment (text) {
+  createComment(text) {
     return document.createComment(text)
   },
-  setComment (el, text) {
+  setComment(el, text) {
     el.nodeValue = text
   },
-  patchProps (el, key, preValue, nextValue) {
+  patchProps(el, key, preValue, nextValue) {
     if (/^on/.test(key)) {
       const invokers = el._vei || (el._vei = {})
       // 事件处理
@@ -663,7 +710,7 @@ const { render } = createRenderer({
       const name = key.slice(2).toLowerCase()
       if (nextValue) {
         if (!invoker) {
-          invoker = el._vei[key] = (e) => {
+          invoker = el._vei[key] = e => {
             // 事件发生时间早于处理函数绑定事件时间，则不执行处理函数
             if (e.timeStamp < invoker.attached) return
             if (Array.isArray(invoker.value)) {
@@ -706,7 +753,7 @@ effect(() => {
     type: 'div',
     props: bol.value
       ? {
-          onClick () {
+          onClick() {
             alert('父元素 clicked')
           }
         }
@@ -715,7 +762,7 @@ effect(() => {
       {
         type: 'p',
         props: {
-          onClick () {
+          onClick() {
             bol.value = true
           }
         },
@@ -731,12 +778,12 @@ effect(() => {
         default: ''
       }
     },
-    data () {
+    data() {
       return {
         foo: 'foo'
       }
     },
-    render () {
+    render() {
       return {
         type: 'div',
         children: `foo is ${this.foo} value. title is ${this.title}`
