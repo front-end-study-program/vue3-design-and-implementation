@@ -1,11 +1,11 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@study-sea/eslint-config-basic': ^0.0.7
+  '@study-sea/eslint-config-basic': ^0.0.8
   eslint: ^8.23.0
 
 devDependencies:
-  '@study-sea/eslint-config-basic': 0.0.7_eslint@8.23.0
+  '@study-sea/eslint-config-basic': 0.0.8_eslint@8.23.0
   eslint: 8.23.0
 
 packages:
@@ -72,8 +72,8 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@study-sea/eslint-config-basic/0.0.7_eslint@8.23.0:
-    resolution: {integrity: sha512-kjVb30Is+wAfJrNn4ZSQroVPaS9knyHNfZEn+7oV2pmdLOHHdhpEBnm6L8WjkBNEzujXaOhP+mBqscf7d5t47g==}
+  /@study-sea/eslint-config-basic/0.0.8_eslint@8.23.0:
+    resolution: {integrity: sha512-idfOK2If+7Pk7vFb3Bu4fGEjIAHNPeLlWapbVKRGBizcxjbEFGOXdtqm+9SjH4tEa6V6uVuaF1gm2x6iXpMhLw==}
     peerDependencies:
       eslint: '>=7.28.0'
     dependencies:

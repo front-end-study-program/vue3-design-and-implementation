@@ -1,6 +1,6 @@
 {
 	"devDependencies": {
 		"eslint": "^8.23.0",
-		"@study-sea/eslint-config-basic": "^0.0.7"
+		"@study-sea/eslint-config-basic": "^0.0.8"
 	}
 }
