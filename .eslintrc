@@ -1,5 +1,9 @@
 {
   "extends": [
     "@study-sea/eslint-config-basic"
-  ]
+  ],
+  "rules": {
+    "object-property-newline": "off",
+    "import/named": "off"
+  }
 }
