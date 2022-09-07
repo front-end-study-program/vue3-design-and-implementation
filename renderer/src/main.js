@@ -475,6 +475,9 @@ function createRenderer(options) {
     if (vnode.type === Fragment) {
       vnode.children.forEach(c => unmount(c))
       return
+    } else if (typeof vnode.type === 'object') {
+      unmount(vnode.component.subTree)
+      return
     }
     const parent = vnode.el.parentNode
     if (parent) {
