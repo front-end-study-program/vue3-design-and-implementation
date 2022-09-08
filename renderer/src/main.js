@@ -407,7 +407,7 @@ function createRenderer(options) {
         // 对比更新
         patchElement(n1, n2)
       }
-    } else if (typeof type === 'object') {
+    } else if (typeof type === 'object' || typeof type === 'function') {
       // 组件
       if (!n1) {
         // 挂载组件
@@ -500,7 +500,17 @@ function createRenderer(options) {
 
   // 挂载组件
   function mountComponent(vnode, container, anchor) {
-    const componentOptions = vnode.type
+    const isFunctional = typeof vnode.type === 'function'
+
+    let componentOptions = vnode.type
+
+    if (isFunctional) {
+      // 函数式组件
+      componentOptions = {
+        render: vnode.type,
+        props: vnode.type.props
+      }
+    }
     let {
       render,
       data,
