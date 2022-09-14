@@ -1,8 +1,12 @@
 let currentInstance = null
 
-const keepAlive = {
+export const keepAlive = {
   // 唯一标识
   __isKeepAlive: true,
+  props: {
+    include: RegExp,
+    exclude: RegExp
+  },
   setup(props, { slots }) {
     // 创建一个缓存对象
     const cache = new Map()
@@ -28,7 +32,19 @@ const keepAlive = {
       // keepAlive 的默认插槽就是要被缓存的组件
       let rawVnode = slots.default()
       // 如果不是组件，直接渲染，是无法被缓存的
-      if (typeof rawVnode.type !== 'function') {
+      if (typeof rawVnode.type !== 'object') {
+        return rawVnode
+      }
+
+      // 获取内部组件的name
+      const { name } = rawVnode.type
+
+      // 判断是否需要缓存组件
+      if (
+        name &&
+        ((props.include && !props.include.test(name)) ||
+          (props.exclude && props.exclude.test(name)))
+      ) {
         return rawVnode
       }
 
