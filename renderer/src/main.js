@@ -411,7 +411,12 @@ function createRenderer(options) {
       // 组件
       if (!n1) {
         // 挂载组件
-        mountComponent(n2, container, anchor)
+        // 如果该组件已经被 keepAlive 则不会重新挂载它，而是会调用 _activate 来激化
+        if (n2.keptAlive) {
+          n2.keepAliveInstance._activate(n2, container, anchor)
+        } else {
+          mountComponent(n2, container, anchor)
+        }
       } else {
         // 更新组件
         patchComponent(n1, n2, anchor)
@@ -476,6 +481,10 @@ function createRenderer(options) {
       vnode.children.forEach(c => unmount(c))
       return
     } else if (typeof vnode.type === 'object') {
+      if (vnode.shouldKeepAlive) {
+        // keepAlive 组件，卸载时将其移动到隐藏容器，不进行真的卸载操作
+        vnode.keepAliveInstance._deActivate(vnode)
+      }
       unmount(vnode.component.subTree)
       return
     }
@@ -540,9 +549,20 @@ function createRenderer(options) {
       isMounted: false,
       subTree: null,
       slots,
-      mounted: []
+      mounted: [],
+      keepAliveCtx: null // keepAlive 专用组件
     }
 
+    // 当前组件是否是 keepAlive 组件
+    const isKeepAlive = vnode.type.__isKeepAlive
+    if (isKeepAlive) {
+      instance.keepAliveCtx = {
+        move(vnode, container, anchor) {
+          insert(vnode.component.subTree.el, container, anchor)
+        },
+        createElement
+      }
+    }
     // 自定义事件处理
     function emit(event, ...payload) {
       const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
