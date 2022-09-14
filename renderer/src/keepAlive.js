@@ -5,7 +5,8 @@ export const keepAlive = {
   __isKeepAlive: true,
   props: {
     include: RegExp,
-    exclude: RegExp
+    exclude: RegExp,
+    max: Number
   },
   setup(props, { slots }) {
     // 创建一个缓存对象
@@ -49,14 +50,20 @@ export const keepAlive = {
       }
 
       // 在挂载时先获取缓存的组件 vnode
-      const cachedVnode = cache[rawVnode.type]
+      const cachedVnode = cache.get(rawVnode.type)
       if (cachedVnode) {
+        // 存在缓存，将当前激活的组件提到缓存的最后
+        cache.delete(rawVnode.type)
+        cache.set(rawVnode.type, rawVnode)
         // 存在缓存，则激活组件
         rawVnode.component = cachedVnode.component // 组件实例
         // 设置 keptAlive 避免渲染器重新挂载
         rawVnode.keptAlive = true
       } else {
         cache.set(rawVnode.type, rawVnode)
+        if (props.max && cache.size > props.max) {
+          cache.delete(cache.keys().next().value)
+        }
       }
       // 设置 shouldKeepAlive 属性，避免渲染器将组件卸载
       rawVnode.shouldKeepAlive = true
