@@ -4,6 +4,16 @@
   ],
   "rules": {
     "object-property-newline": "off",
-    "import/named": "off"
+    "import/named": "off",
+    "prettier/prettier": [
+      "warn",
+      {
+        "semi": false,
+        "singleQuote": true, // 使用单引号
+        "arrowParens": "avoid", // 箭头函数括号
+        "trailingComma": "none", // 最后key不跟分号
+        "endOfLine": "auto"
+      }
+    ]
   }
 }
