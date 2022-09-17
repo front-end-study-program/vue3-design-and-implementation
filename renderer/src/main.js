@@ -407,6 +407,20 @@ function createRenderer(options) {
         // 对比更新
         patchElement(n1, n2)
       }
+    } else if (typeof type === 'object' && type.__isTeleport) {
+      // Teleport 组件
+      type.process(n1, n2, container, anchor, {
+        patch,
+        patchChildren,
+        unmount,
+        move(vnode, container, anchor) {
+          insert(
+            vnode.component ? vnode.component.subTree.el : vnode.el,
+            container,
+            anchor
+          )
+        }
+      })
     } else if (typeof type === 'object' || typeof type === 'function') {
       // 组件
       if (!n1) {
